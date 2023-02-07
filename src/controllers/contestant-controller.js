@@ -1,37 +1,27 @@
 const multer = require("multer");
 const sharp = require("sharp");
+const cloudinary = require("../utils/cloudinary");
 const Contestant = require("../models/contestant-model");
 const factory = require("../controllers/handlerFactory");
 const catchAsync = require("../utils/catchAsync");
 
-const multerStorage = multer.memoryStorage();
+const multerStorage = multer.diskStorage({});
 
-const multerFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image")) {
-    cb(null, true);
-  } else {
-    cb(new AppError("Not an image! Please upload only images.", 400), false);
-  }
-};
-
-const upload = multer({
-  storage: multerStorage,
-  fileFilter: multerFilter,
-});
+const upload = multer({ storage: multerStorage });
 
 exports.uploadUserPhoto = upload.single("photo");
 
 exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
   if (!req.file) return next();
 
-  req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+  const result = await cloudinary.uploader.upload(req.file.path, {
+    width: 500,
+    height: 500,
+    crop: "fill",
+  });
 
-  await sharp(req.file.buffer)
-    .resize(500, 500)
-    .toFormat("jpeg")
-    .jpeg({ quality: 90 })
-    .toFile(`public/img/users/${req.file.filename}`);
-
+  req.body.photo = result.url;
+  req.body.cloudinary_id = result.public_id;
   next();
 });
 

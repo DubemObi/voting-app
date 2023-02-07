@@ -1,5 +1,4 @@
 const Flutterwave = require("flutterwave-node-v3");
-const Vote = require("../models/vote-model");
 const Contestant = require("../models/contestant-model");
 const factory = require("./handlerFactory");
 const catchAsync = require("../utils/catchAsync");
@@ -15,7 +14,9 @@ const flw = new Flutterwave(
 exports.checkout = catchAsync(async (req, res, next) => {
   try {
     const constestantID = req.params.id;
-    const findContestant = await Contestant.findById(constestantID);
+    const findContestant = await Contestant.findById(constestantID).populate({
+      path: "name category votes",
+    });
 
     if (findContestant) {
       let payload = req.body;
@@ -48,10 +49,13 @@ exports.checkout = catchAsync(async (req, res, next) => {
             await newEmail({
               email: req.body.email,
               subject: "Vote successful",
-              text: findOrder,
+              text: `You have purchased ${req.body.votes} amount of votes for ${constestantID}`,
             });
 
-            const update = findContestant.votes + req.body.votes;
+            const newVotes = findContestant.votes + req.body.votes;
+            const update = {
+              votes: newVotes,
+            };
 
             const doc = await Contestant.findByIdAndUpdate(
               constestantID,
@@ -62,8 +66,9 @@ exports.checkout = catchAsync(async (req, res, next) => {
               }
             );
 
-            res.status(200).json({
+            return res.status(200).json({
               status: "success",
+              data: doc,
               message: "Vote has been added successfully",
             });
           }
@@ -75,23 +80,21 @@ exports.checkout = catchAsync(async (req, res, next) => {
           }
         }
       } catch (error) {
-        response.send("An error occured");
+        console.log(error);
+        return res.send("An error occured");
       }
     } else {
       return next(new AppError("No document found with that ID", 404));
     }
   } catch (err) {
-    response.status(400).json({ message: "Incomplete requirements" });
+    return res.status(400).json({ message: "Incomplete requirements" });
   }
   next();
 });
 
 exports.results = catchAsync(async (req, res, next) => {
-  const result = await Contestants.find({ select: "name votes" }).select(
-    "+votes"
-  );
-  // SEND RESPONSE
-  res.status(200).json({
+  const result = await Contestant.find({}, "name votes").select("+votes");
+  return res.status(200).json({
     status: "success",
     results: result.length,
     data: {

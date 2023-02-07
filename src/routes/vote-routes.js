@@ -7,6 +7,11 @@ const router = express.Router();
 
 router.post("/checkout/:id", voteController.checkout);
 
-router.get("/", voteController.results);
+router.get(
+  "/",
+  authController.protect,
+  authController.restrictTo("admin"),
+  voteController.results
+);
 
 module.exports = router;

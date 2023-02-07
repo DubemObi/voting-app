@@ -15,8 +15,10 @@ const contestantSchema = new mongoose.Schema({
   },
   votes: {
     type: Number,
+    default: 0,
     select: false,
   },
+  cloudinary_id: String,
 });
 
 const user = mongoose.model("Contestant", contestantSchema);
