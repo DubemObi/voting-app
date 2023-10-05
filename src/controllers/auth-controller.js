@@ -92,7 +92,15 @@ exports.protect = catchAsync(async (req, res, next) => {
     );
   }
 
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  // const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  const decoded = await jwt.verify(
+    token,
+    process.env.JWT_SECRET,
+    (err, data) => {
+      if (err) return reject(err);
+      return resolve(data);
+    }
+  );
 
   const currentUser = await User.findById(decoded.id);
   if (!currentUser) {
