@@ -13,8 +13,8 @@ router
   .post(
     authController.protect,
     authController.restrictTo("admin"),
-    userController.uploadUserPhoto,
-    userController.resizeUserPhoto,
+    contestantController.uploadUserPhoto,
+    contestantController.resizeUserPhoto,
     contestantController.createContestant
   );
 

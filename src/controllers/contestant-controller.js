@@ -5,7 +5,7 @@ const Contestant = require("../models/contestant-model");
 const factory = require("../controllers/handlerFactory");
 const catchAsync = require("../utils/catchAsync");
 
-const multerStorage = multer.diskStorage({});
+const multerStorage = multer.memoryStorage();
 
 const upload = multer({ storage: multerStorage });
 
@@ -14,7 +14,9 @@ exports.uploadUserPhoto = upload.single("photo");
 exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
   if (!req.file) return next();
 
-  const result = await cloudinary.uploader.upload(req.file.path, {
+  const b64 = Buffer.from(req.file.buffer).toString("base64");
+  let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+  const result = await cloudinary.uploader.upload(dataURI, {
     width: 500,
     height: 500,
     crop: "fill",

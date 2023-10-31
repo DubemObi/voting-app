@@ -52,7 +52,7 @@ exports.checkout = catchAsync(async (req, res, next) => {
               text: `You have purchased ${req.body.votes} amount of votes for ${constestantID}`,
             });
 
-            const newVotes = findContestant.votes + req.body.votes;
+            const newVotes = findContestant.votes + req.body.votes * 1;
             const update = {
               votes: newVotes,
             };
